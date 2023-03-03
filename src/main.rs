@@ -19,6 +19,8 @@ fn main() {
     );
 }
 
+#[cfg_attr(target_os = "windows", windows_subsystem = "windows")]
+
 struct Message {
     message: String,
     from_self: bool,
@@ -49,6 +51,7 @@ struct BaneApp {
     messages: HashMap<u64, Vec<Message>>,
     client: Client,
     ws: Option<(Sender<SendMessage>, Receiver<RecvMessage>)>,
+    name: String,
 }
 
 impl BaneApp {
@@ -130,6 +133,13 @@ impl BaneApp {
         });
         self.ws = Some((ch1.0, ch2.1));
         self.state = State::default_main();
+        self.name = format!(
+            "{}#{}",
+            res.get("name")
+                .map(|e| e.as_str().unwrap_or_default())
+                .unwrap_or_default(),
+            res.get("num").map(|e| e.to_string()).unwrap_or_default()
+        );
         Ok(())
     }
 
@@ -178,6 +188,7 @@ impl Default for BaneApp {
             chats: HashMap::new(),
             messages: HashMap::new(),
             client: Client::new(),
+            name: String::new(),
             ws: None,
         }
     }
@@ -218,9 +229,12 @@ impl eframe::App for BaneApp {
                 ref mut message,
             } => {
                 egui::TopBottomPanel::top("Top Bar").show(ctx, |ui| {
-                    ui.menu_button("Add person", |ui| {
-                        ui.text_edit_singleline(add_person);
-                        add_clicked = ui.button("add").clicked();
+                    ui.horizontal(|ui| {
+                        ui.menu_button("Add person", |ui| {
+                            ui.text_edit_singleline(add_person);
+                            add_clicked = ui.button("add").clicked();
+                        });
+                        ui.label(&self.name)
                     });
                 });
                 egui::SidePanel::left("Chats")

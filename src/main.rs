@@ -67,7 +67,7 @@ impl BaneApp {
         if let Some(ref mut ws) = self.ws {
             ws.0.blocking_send(SendMessage::Message {
                 message: message.clone(),
-                reciever: id.clone(),
+                receiver: id.clone(),
             });
             self.messages
                 .entry(id.clone())
@@ -311,7 +311,7 @@ pub enum RecvMessage {
 #[derive(Serialize, Debug)]
 #[serde(tag = "type")]
 pub enum SendMessage {
-    Message { message: String, reciever: Id },
+    Message { message: String, receiver: Id },
 }
 
 async fn websocket_thread<'a, T>(
